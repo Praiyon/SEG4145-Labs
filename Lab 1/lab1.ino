@@ -1,3 +1,4 @@
+
 /**
 * Ryan Fitzgerald (7233237)
 * Cody McCoshen (7208960)
@@ -13,15 +14,10 @@
 #include <stdio.h>
 
 // Macros
-#define LEFT_FORWARD()		analogWrite(45, 191.5);
-#define LEFT_BACKWARD()		analogWrite(45, 10);
-#define LEFT_STOP()			analogWrite(45, 0);
-#define RIGHT_FORWARD()		analogWrite(8, 10);
-#define RIGHT_BACKWARD()	analogWrite(8, 191.5);
-#define RIGHT_STOP()		analogWrite(8, 0);
 
 // Global variables
 int flashing;
+SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -29,9 +25,6 @@ void setup() {
     pinMode(13, OUTPUT); // LED
     pinMode(45, OUTPUT); // Left Motor
     pinMode(8, OUTPUT); // Right Motor
-
-    // Initialize the LCD screen
-    SoftwareSerial LCD = SoftwareSerial(0, 18);
 
     // Asign LCD Port
     LCD.begin(9600);
@@ -69,10 +62,13 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+  
     // --- Path 1 ---
+    printPath("Path 1");
     doPath1();
 
     // --- Path 2 ---
+    printPath("Path 2");
     doPath2();
 }
 
@@ -85,6 +81,27 @@ void clearLCD() {
     LCD.write(0xFE);  // Put the LCD screen in command mode.
     LCD.write(0x01);  // Clear the LCD screen.
     delay(10);
+}
+
+/**
+* Prints path to the LCD screen.
+* @name printPath
+* @param path the message that will be printed
+* @return (void)
+*/
+void printPath(char* path) {
+    // Clear the LCD
+    clearLCD();
+
+    // Put the LCD screen in command mode.
+    LCD.write(0xFE);
+
+    // Set cursor to first row, first column
+    LCD.write(0 + 0*64 + 128);
+
+    // Print the path
+    LCD.print(path);
+    delay(3000);
 }
 
 /**
