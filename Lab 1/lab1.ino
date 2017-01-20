@@ -172,7 +172,7 @@ void printMessage(char* msg) {
 
 // Flash light
 void flashLight(int num) {
-    for (flash = 0; flashing < num; flashing++) {
+    for (flashing = 0; flashing < num; flashing++) {
         // Wait for 1s
         delay(1000);
 
