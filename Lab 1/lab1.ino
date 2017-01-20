@@ -14,6 +14,12 @@
 #include <stdio.h>
 
 // Macros
+#define LEFT_FORWARD()    	analogWrite(45, 191.5);
+#define LEFT_BACKWARD()   	analogWrite(45, 10);
+#define LEFT_STOP()     	analogWrite(45, 0);
+#define RIGHT_FORWARD()   	analogWrite(8, 10);
+#define RIGHT_BACKWARD()  	analogWrite(8, 191.5);
+#define RIGHT_STOP()    	analogWrite(8, 0);
 
 // Global variables
 int flashing;
