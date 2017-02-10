@@ -16,12 +16,14 @@
 // Macros
 #define LEFT_FORWARD()    analogWrite(45, 191.5);
 #define LEFT_BACKWARD()   analogWrite(45, 10);
-#define LEFT_STOP()     analogWrite(45, 0);
+#define LEFT_STOP()       analogWrite(45, 0);
 #define RIGHT_FORWARD()   analogWrite(8, 10);
 #define RIGHT_BACKWARD()  analogWrite(8, 191.5);
-#define RIGHT_STOP()    analogWrite(8, 0);
+#define RIGHT_STOP()      analogWrite(8, 0);
 
 // Global variables
+char state[] = "";
+int stopped = 0;
 int flashing;
 SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 
@@ -176,25 +178,76 @@ void flashLight(int num) {
 }
 
 /**
+* Continues wheel motor from where it left off
+* @name continueOperation
+* @return (void)
+*/
+void continueOperation() {
+	
+	// Check wheel 1 (Left)
+	if (stopped == 1 && state == "forward" || state == "right") {
+		LEFT_FORWARD();
+	} else if (stopped == 1 && state == "left") {
+		LEFT_BACKWARD();
+	}
+	
+	// Check wheel 2 (Left)
+	if (stopped == 2 && state == "forward" || state == "left") {
+		RIGHT_FORWARD();
+	} else if (stopped == 2 && state == "right") {
+		RIGHT_BACKWARD();
+	}
+	
+	// Reset stopped flag
+	stopped = 0;
+	
+}
+
+/**
 * Performs an action for a predefined number of "ticks"
 * @name performAction
 * @param ticks number of wheel ticks that must be processed
 * @return (void)
 */
 void performAction(int ticks) {
-    int times = 0;
-    int oldPulse = NULL;
-    int newPulse = NULL;
+    int timeLeft = 0;
+	int timeRight = 0;
+	int oldPulseLeft = NULL;
+	int newPulseLeft = NULL;
+	int oldPulseRight = NULL;
+	int newPulseRight = NULL;
 
-    while (times < ticks) {
+    while (timeLeft < ticks && timeRight < ticks) {
+		
+		// Read left motor  sensor
+		oldPulseLeft = newPulseLeft;
+		newPulseLeft = digitalRead(48);
+		
+		// Read right motor sensor
+		oldPulseRight = newPulseRight;
+		newPulseRight = digitalRead(49);
+		
+		// If new tick, increment left time
+		if (newPulseLeft != oldPulseLeft) {
+			timeLeft++;
+		}
+		
+		// If new tick, increment right time
+		if (newPulseRight != oldPulseRight) {
+			timeRight++;
+		}
 
-      oldPulse = newPulse;
-      newPulse = digitalRead(48);
-
-      if (newPulse != oldPulse) {
-        times++;
-      }
-           
+		// Check if sensors are equal or not
+		// 1 is LEFT wheel, 2 is RIGHT wheel
+		if (timeLeft > timeRight) {
+			LEFT_STOP();
+			stopped = 1;
+		} else if (timeRight > timeLeft) {
+			RIGHT_STOP();
+			stopped = 2;
+		} else if (stopped > 0 && timeRight == timeLeft) {
+			continueOperation();
+		}
     }
 }
 
