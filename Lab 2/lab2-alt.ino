@@ -262,6 +262,7 @@ void stopMotor(int duration) {
     LEFT_STOP();
     RIGHT_STOP();
     performAction(duration);
+	state[] = "stop";
 }
 
 /**
@@ -275,6 +276,7 @@ void moveForward(int duration) {
     LEFT_FORWARD();
     RIGHT_FORWARD();
     performAction(duration);
+	state[] = "forward";
 }
 
 /**
@@ -288,6 +290,7 @@ void moveBackward(int duration) {
     LEFT_BACKWARD();
     RIGHT_BACKWARD();
     performAction(duration);
+	state[] = "backward";
 }
 
 /**
@@ -301,6 +304,7 @@ void turnLeft(int duration) {
     LEFT_BACKWARD();
     RIGHT_FORWARD();
     performAction(duration);
+	state[] = "left";
 }
 
 /**
@@ -314,6 +318,7 @@ void turnRight(int duration) {
     LEFT_FORWARD();
     RIGHT_BACKWARD();
     performAction(duration);
+	state[] = "right";
 }
 
 /**
