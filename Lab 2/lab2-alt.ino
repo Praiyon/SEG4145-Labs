@@ -183,24 +183,24 @@ void flashLight(int num) {
 * @return (void)
 */
 void continueOperation() {
-	
-	// Check wheel 1 (Left)
-	if (stopped == 1 && state == "forward" || state == "right") {
-		LEFT_FORWARD();
-	} else if (stopped == 1 && state == "left") {
-		LEFT_BACKWARD();
-	}
-	
-	// Check wheel 2 (Left)
-	if (stopped == 2 && state == "forward" || state == "left") {
-		RIGHT_FORWARD();
-	} else if (stopped == 2 && state == "right") {
-		RIGHT_BACKWARD();
-	}
-	
-	// Reset stopped flag
-	stopped = 0;
-	
+    
+    // Check wheel 1 (Left)
+    if (stopped == 1 && state == "forward" || state == "right") {
+        LEFT_FORWARD();
+    } else if (stopped == 1 && state == "left") {
+        LEFT_BACKWARD();
+    }
+    
+    // Check wheel 2 (Left)
+    if (stopped == 2 && state == "forward" || state == "left") {
+        RIGHT_FORWARD();
+    } else if (stopped == 2 && state == "right") {
+        RIGHT_BACKWARD();
+    }
+    
+    // Reset stopped flag
+    stopped = 0;
+    
 }
 
 /**
@@ -211,43 +211,43 @@ void continueOperation() {
 */
 void performAction(int ticks) {
     int timeLeft = 0;
-	int timeRight = 0;
-	int oldPulseLeft = NULL;
-	int newPulseLeft = NULL;
-	int oldPulseRight = NULL;
-	int newPulseRight = NULL;
+    int timeRight = 0;
+    int oldPulseLeft = NULL;
+    int newPulseLeft = NULL;
+    int oldPulseRight = NULL;
+    int newPulseRight = NULL;
 
     while (timeLeft < ticks && timeRight < ticks) {
-		
-		// Read left motor  sensor
-		oldPulseLeft = newPulseLeft;
-		newPulseLeft = digitalRead(48);
-		
-		// Read right motor sensor
-		oldPulseRight = newPulseRight;
-		newPulseRight = digitalRead(49);
-		
-		// If new tick, increment left time
-		if (newPulseLeft != oldPulseLeft) {
-			timeLeft++;
-		}
-		
-		// If new tick, increment right time
-		if (newPulseRight != oldPulseRight) {
-			timeRight++;
-		}
+        
+        // Read left motor  sensor
+        oldPulseLeft = newPulseLeft;
+        newPulseLeft = digitalRead(48);
+        
+        // Read right motor sensor
+        oldPulseRight = newPulseRight;
+        newPulseRight = digitalRead(49);
+        
+        // If new tick, increment left time
+        if (newPulseLeft != oldPulseLeft) {
+            timeLeft++;
+        }
+        
+        // If new tick, increment right time
+        if (newPulseRight != oldPulseRight) {
+            timeRight++;
+        }
 
-		// Check if sensors are equal or not
-		// 1 is LEFT wheel, 2 is RIGHT wheel
-		if (timeLeft > timeRight) {
-			LEFT_STOP();
-			stopped = 1;
-		} else if (timeRight > timeLeft) {
-			RIGHT_STOP();
-			stopped = 2;
-		} else if (stopped > 0 && timeRight == timeLeft) {
-			continueOperation();
-		}
+        // Check if sensors are equal or not
+        // 1 is LEFT wheel, 2 is RIGHT wheel
+        if (timeLeft > timeRight) {
+            LEFT_STOP();
+            stopped = 1;
+        } else if (timeRight > timeLeft) {
+            RIGHT_STOP();
+            stopped = 2;
+        } else if (stopped > 0 && timeRight == timeLeft) {
+            continueOperation();
+        }
     }
 }
 
@@ -262,7 +262,7 @@ void stopMotor(int duration) {
     LEFT_STOP();
     RIGHT_STOP();
     performAction(duration);
-	state[] = "stop";
+    state[] = "stop";
 }
 
 /**
@@ -276,7 +276,7 @@ void moveForward(int duration) {
     LEFT_FORWARD();
     RIGHT_FORWARD();
     performAction(duration);
-	state[] = "forward";
+    state[] = "forward";
 }
 
 /**
@@ -290,7 +290,7 @@ void moveBackward(int duration) {
     LEFT_BACKWARD();
     RIGHT_BACKWARD();
     performAction(duration);
-	state[] = "backward";
+    state[] = "backward";
 }
 
 /**
@@ -304,7 +304,7 @@ void turnLeft(int duration) {
     LEFT_BACKWARD();
     RIGHT_FORWARD();
     performAction(duration);
-	state[] = "left";
+    state[] = "left";
 }
 
 /**
@@ -318,7 +318,7 @@ void turnRight(int duration) {
     LEFT_FORWARD();
     RIGHT_BACKWARD();
     performAction(duration);
-	state[] = "right";
+    state[] = "right";
 }
 
 /**
