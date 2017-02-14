@@ -17,14 +17,13 @@
 #define LEFT_FORWARD()    analogWrite(45, 191.5);
 #define LEFT_BACKWARD()   analogWrite(45, 10);
 #define LEFT_STOP()       analogWrite(45, 0);
-#define RIGHT_FORWARD()   analogWrite(8, 10);
+#define RIGHT_FORWARD()   analogWrite(8, 10); // 100
 #define RIGHT_BACKWARD()  analogWrite(8, 191.5);
 #define RIGHT_STOP()      analogWrite(8, 0);
 
 // Global variables
-char state[] = "";
-int stopped = 0;
 int flashing;
+int turning = 0;
 SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 
 // the setup function runs once when you press reset or power the board
@@ -182,24 +181,15 @@ void flashLight(int num) {
 * @name continueOperation
 * @return (void)
 */
-void continueOperation() {
+void adjustSpeed(int motor) {
     
-    // Check wheel 1 (Left)
-    if (stopped == 1 && state == "forward" || state == "right") {
-        LEFT_FORWARD();
-    } else if (stopped == 1 && state == "left") {
-        LEFT_BACKWARD();
+    if (motor == 45) {
+      RIGHT_FORWARD();
+      analogWrite(motor, 150);
+    } else {
+      LEFT_FORWARD();
+      analogWrite(motor, 100);
     }
-    
-    // Check wheel 2 (Left)
-    if (stopped == 2 && state == "forward" || state == "left") {
-        RIGHT_FORWARD();
-    } else if (stopped == 2 && state == "right") {
-        RIGHT_BACKWARD();
-    }
-    
-    // Reset stopped flag
-    stopped = 0;
     
 }
 
@@ -216,8 +206,9 @@ void performAction(int ticks) {
     int newPulseLeft = NULL;
     int oldPulseRight = NULL;
     int newPulseRight = NULL;
+    int valid = 0;
 
-    while (timeLeft < ticks && timeRight < ticks) {
+    while (valid == 0) {
         
         // Read left motor  sensor
         oldPulseLeft = newPulseLeft;
@@ -237,16 +228,18 @@ void performAction(int ticks) {
             timeRight++;
         }
 
-        // Check if sensors are equal or not
-        // 1 is LEFT wheel, 2 is RIGHT wheel
-        if (timeLeft > timeRight) {
-            LEFT_STOP();
-            stopped = 1;
-        } else if (timeRight > timeLeft) {
-            RIGHT_STOP();
-            stopped = 2;
-        } else if (stopped > 0 && timeRight == timeLeft) {
-            continueOperation();
+        if (turning != 1) {
+          
+          // Check if sensors are equal or not
+          if (timeLeft > timeRight) {
+              adjustSpeed(45);
+          } else if (timeRight > timeLeft) {
+              adjustSpeed(8);
+          }
+        }
+
+        if (timeLeft >= ticks && timeRight >= ticks) {
+          valid = 1;
         }
     }
 }
@@ -261,8 +254,8 @@ void performAction(int ticks) {
 void stopMotor(int duration) {
     LEFT_STOP();
     RIGHT_STOP();
-    performAction(duration);
-    state[] = "stop";
+    turning = 0;
+    delay(duration);
 }
 
 /**
@@ -275,8 +268,8 @@ void stopMotor(int duration) {
 void moveForward(int duration) {
     LEFT_FORWARD();
     RIGHT_FORWARD();
+    turning = 0;
     performAction(duration);
-    state[] = "forward";
 }
 
 /**
@@ -289,8 +282,8 @@ void moveForward(int duration) {
 void moveBackward(int duration) {
     LEFT_BACKWARD();
     RIGHT_BACKWARD();
+    turning = 0;
     performAction(duration);
-    state[] = "backward";
 }
 
 /**
@@ -303,8 +296,8 @@ void moveBackward(int duration) {
 void turnLeft(int duration) {
     LEFT_BACKWARD();
     RIGHT_FORWARD();
+    turning = 1;
     performAction(duration);
-    state[] = "left";
 }
 
 /**
@@ -317,8 +310,8 @@ void turnLeft(int duration) {
 void turnRight(int duration) {
     LEFT_FORWARD();
     RIGHT_BACKWARD();
+    turning = 1;
     performAction(duration);
-    state[] = "right";
 }
 
 /**
@@ -330,73 +323,73 @@ void doPath(){
   
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(128);
+    moveForward(230);
 
     // Turn Right
     printMessage("Turning", "Right");
-    turnRight(45);
+    turnRight(55);
 
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(128);
+    moveForward(230);
 
     // Turn right
     printMessage("Turning", "Right");
-    turnRight(45);
+    turnRight(55);
 
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(192);
+    moveForward(345);
 
     // Turn right
     printMessage("Turning", "Right");
-    turnRight(64);
+    turnRight(55);
 
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(192);
+    moveForward(360);
 
     // Turn Right
     printMessage("Turning", "Right");
-    turnRight(64);
+    turnRight(55);
 
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(128);
+    moveForward(230);
 
     // Turn 45 Left
     printMessage("Turning", "Left");
-    turnLeft(32);
+    turnLeft(26);
 
     // Move Straight
     printMessage("Moving", "Forward");
-    moveForward(64);
+    moveForward(115);
     
     // Turn left 135
     printMessage("Turning", "Left");
-    turnLeft(96);
+    turnLeft(85);
 
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(256);
+    moveForward(460);
 
     // Turn left
     printMessage("Turning", "Left");
-    turnLeft(64);
+    turnLeft(52);
     
     // Move straight
     printMessage("Moving", "Forward");
-    moveForward(128);
+    moveForward(230);
 
     // Turn left
     printMessage("Turning", "Left");
-    turnLeft(64);
+    turnLeft(52);
 
      // Move straight
     printMessage("Moving", "Forward");
-    moveForward(128);
+    moveForward(230);
     
-    // Stop motor for 5s
+    // Stop motor
     printMessage("Stopped", 0);
-    stopMotor(64);
+    stopMotor(5000);
 }
