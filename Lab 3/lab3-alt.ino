@@ -21,14 +21,14 @@
 #define RIGHT_FORWARD()   analogWrite(8, 10);
 #define RIGHT_BACKWARD()  analogWrite(8, 191.5);
 #define RIGHT_STOP()      analogWrite(8, 0);
-#define TEMPSENSOR       0x68
+#define TEMPSENSOR        0x68
 
 // Global variables
 int flashing, checkSonar;
 int turning = 0;
 long pingDuration;
 long distance;
-byte temperatureData; // May need to be byte
+byte temperatureData;
 SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 int reg = 0x01; // For ambient temperature reader
 
@@ -74,21 +74,21 @@ void setup() {
     // Clear LCD
     clearLCD();
   
-  // Join I2C bus for ambient temp
-  Wire.begin(); 
+    // Join I2C bus for ambient temp
+    Wire.begin(); 
 }
 
 // the loop function runs over and over again forever
 void loop() {
-  // Set check sonar to 1
-  checkSonar = 1;
-  
-  // Move forward 1 tile
-  printMessage("Moving", "Forward");
-  moveForward(50);
-  
-  // Stop for 1s
-  stopMotor(1000);
+    // Set check sonar to 1
+    checkSonar = 1;
+
+    // Move forward 1 tile
+    printMessage("Moving", "Forward");
+    moveForward(50);
+
+    // Stop for 1s
+    stopMotor(1000);
 }
 
 /**
@@ -105,7 +105,7 @@ void clearLCD() {
 /**
 * Prints a message to the LCD screen.
 * @name printMessage
-* @param msg the message that will be printed
+* @param word1 word on first line, word2 word of second line
 * @return (void)
 */
 void printMessage(char* word1, char* word2) {
@@ -139,13 +139,14 @@ void printMessage(char* word1, char* word2) {
         LCD.print(word2);
     }
     
+    // Delay for 10 milliseconds
     delay(10);
 }
 
 /**
-* Prints a message to the LCD screen.
+* Prints temperature to LCD Screen
 * @name printTemperature
-* @param msg the message that will be printed
+* @param word1 word on first line, word2 word of second line
 * @return (void)
 */
 void printTemperature(char* word1, byte word2) {
@@ -178,7 +179,8 @@ void printTemperature(char* word1, byte word2) {
         // Print the message
         LCD.print(word2);
     }
-    
+	
+    // Delay for 10 milliseconds
     delay(10);
 }
 
@@ -206,7 +208,7 @@ void flashLight(int num) {
 
 /**
 * Adjust the speed of the wheels
-* @name continueOperation
+* @name adjustSpeed
 * @param motor number of motor
 * @return (void)
 */
@@ -229,16 +231,16 @@ void adjustSpeed(int motor) {
 */
 void performSonar(){
   
-  // Output Sonar sensor
+    // Output Sonar sensor
     pinMode(22, OUTPUT); 
   
-  // Write low value to pin
+    // Write low value to pin
     digitalWrite(22, LOW);
   
     //Wait for 2 microsecs
     delay(0.002);
   
-  // Write high value to pin
+    // Write high value to pin
     digitalWrite(22, HIGH);
   
     //Wait for 5 microsecs
@@ -253,10 +255,10 @@ void performSonar(){
     // Read duration of the pulse
     pingDuration = pulseIn(22, HIGH);
   
-  // Calculate distance
+    // Calculate distance
     distance = pingDuration / (29*2);
-  
-  // Delay 10 milliseconds
+    
+    // Delay 10 milliseconds
     delay(10);
 }
 
@@ -268,38 +270,38 @@ void performSonar(){
 */
 void collisionAvoid(){
   
-  // Set checkSonar to 0
-  checkSonar = 0;
- 
-  // Stop the motor
-  stopMotor(10);
-  
-  // Read the temperature
-  readTemp();
-  
-  // Print the temperature
-  printTemperature("Temperature", temperatureData);
-  
-  // Delay for 5s
-  delay(5000);  
+    // Set checkSonar to 0
+    checkSonar = 0;
 
-  // Move the robot back 1 tile
-  printMessage("Moving", "Backward");
-  moveBackward(115);
-  
-  // Rotate robot 90 degrees cw
-  printMessage("Turning", "Right");
-  turnRight(55);
-  
-  // Move forward 2 tiles
-  printMessage("Moving", "Forward");
-  moveForward(230);
-  
-  // Rotate robot 90 degrees ccw
-  printMessage("Turning", "Left");
-  turnLeft(20);
-  
-  // Returns and continues forward movement
+    // Stop the motor
+    stopMotor(10);
+
+    // Read the temperature
+    readTemp();
+
+    // Print the temperature
+    printTemperature("Temperature", temperatureData);
+
+    // Delay for 5s
+    delay(5000);  
+
+    // Move the robot back 1 tile
+    printMessage("Moving", "Backward");
+    moveBackward(115);
+
+    // Rotate robot 90 degrees cw
+    printMessage("Turning", "Right");
+    turnRight(55);
+
+    // Move forward 2 tiles
+    printMessage("Moving", "Forward");
+    moveForward(230);
+
+    // Rotate robot 90 degrees ccw
+    printMessage("Turning", "Left");
+    turnLeft(20);
+
+    // Returns and continues forward movement
  
 }
 
@@ -320,19 +322,19 @@ void actionLength(int ticks) {
 
     while (valid == 0) {
     
-    // If checking sonar is required
-    if (checkSonar == 1) {
-      
-      // Check sonar
-      performSonar();
-      
-      // Check if distance is less than or equal to 10
-      if (distance <= 10.0) {
-        collisionAvoid();
-      }
-      
-    }
-    
+        // If checking sonar is required
+        if (checkSonar == 1) {
+          
+            // Check sonar
+            performSonar();
+
+            // Check if distance is less than or equal to 10
+            if (distance <= 10.0) {
+            collisionAvoid();
+            }
+          
+        }
+        
         // Read left motor  sensor
         oldPulseLeft = newPulseLeft;
         newPulseLeft = digitalRead(48);
@@ -351,7 +353,7 @@ void actionLength(int ticks) {
             timeRight++;
         }
 
-    // If the robot is not currently turning
+        // If the robot is not currently turning
         if (turning != 1) {
           
           // Check if sensors are equal or not
@@ -362,6 +364,7 @@ void actionLength(int ticks) {
           }
         }
 
+        // Set valid flag to true if both are done		
         if (timeLeft >= ticks && timeRight >= ticks) {
           valid = 1;
         }
@@ -374,13 +377,13 @@ void actionLength(int ticks) {
 * @return (void)
 */
 void readTemp() {
-  Wire.beginTransmission(TEMPSENSOR);
-  Wire.write(reg); // Indicate temperature value to read
-  Wire.endTransmission();
-  Wire.requestFrom(TEMPSENSOR, 1); // Request data
-  while(Wire.available() < 1); // Wait for data
-  temperatureData = Wire.read(); // Store temperature value
-  delay(50); // Delay 50 ms if values are read in a loop
+    Wire.beginTransmission(TEMPSENSOR);
+    Wire.write(reg); // Indicate temperature value to read
+    Wire.endTransmission();
+    Wire.requestFrom(TEMPSENSOR, 1); // Request data
+    while(Wire.available() < 1); // Wait for data
+    temperatureData = Wire.read(); // Store temperature value
+    delay(50); // Delay 50 ms if values are read in a loop
 }
 
 /**
@@ -421,7 +424,7 @@ void moveForward(int duration) {
 void moveBackward(int duration) {
     LEFT_BACKWARD();
     RIGHT_BACKWARD();
-    turning = 1;
+    turning = 1; // Flag so wheels don't get adjusted
     actionLength(duration);
 }
 
