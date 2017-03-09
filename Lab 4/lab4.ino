@@ -1,3 +1,6 @@
+
+
+
 /**
 * Ryan Fitzgerald (7233237)
 * Cody McCoshen (7208960)
@@ -13,6 +16,10 @@
 #include <SoftwareSerial.h>
 #include <stdio.h>
 #include <Wire.h>
+//#include <Wirefree.h>
+//#include <WifiClient.h>
+#include <WiFi.h>
+
 
 // Macros
 #define LEFT_FORWARD()    analogWrite(45, 191.5);
@@ -22,6 +29,13 @@
 #define RIGHT_BACKWARD()  analogWrite(8, 191.5);
 #define RIGHT_STOP()      analogWrite(8, 0);
 #define TEMPSENSOR        0x68
+
+//WIFI_PROFILE wireless_prof = {"Mi-Fi-Guy","06f50719d6c1","10.136.160.21","255.255.255.0","192.168.43.1"};
+
+String remote_server = "137.122.45.214"; 
+String remote_port = "9876";
+
+//WifiClient client(remote_server, remote_port, PROTO_UDP);
 
 // Global variables
 int flashing, checkSonar;
@@ -34,13 +48,16 @@ int reg = 0x01; // For ambient temperature reader
 
 // the setup function runs once when you press reset or power the board
 void setup() {
+  
+
+    
     // Assign all required pins
     pinMode(13, OUTPUT); // LED
     pinMode(45, OUTPUT); // Left Motor
     pinMode(8, OUTPUT); // Right Motor
     pinMode(49, INPUT); // Left wheel sensor
     pinMode(48, INPUT); // Right wheel sensor
-
+      
     // Asign LCD Port
     LCD.begin(9600);
 
@@ -75,12 +92,39 @@ void setup() {
     clearLCD();
   
     // Join I2C bus for ambient temp
-    Wire.begin(); 
+    Wire.begin();
+    
+        byte mac[6];
+    WiFi.macAddress(mac);
+    printMessage((char *)mac, "asfsadf");
+    
+    delay(5000);
+    
+    printMessage("Profile","Before");
+    
+    // connect to AP
+    //Wireless.begin(&wireless_prof);
+    
+    printMessage("Profile","After");
+    
+//    if(client.connect()){
+//      printMessage("Client", "Connected");
+//      //client.println("A message");
+//    } else {
+//      printMessage("Connection", "Failed");
+//    } 
 }
 
 // the loop function runs over and over again forever
 void loop() {
-
+//  printMessage("Waiting For","Client");
+//  while (client.available()){
+//    int in;
+//    while((in = client.read()) == -1);
+//
+//    printMessage("Client Says:",(char*)in);
+//  }
+//  delay(1);
 }
 
 /**
@@ -100,7 +144,7 @@ void clearLCD() {
 * @param word1 word on first line, word2 word of second line
 * @return (void)
 */
-void printMessage(char* word1, char* word2) {
+void printMessage(char * word1, char* word2) {
     // Clear the LCD
     clearLCD();
 
@@ -142,38 +186,38 @@ void printMessage(char* word1, char* word2) {
 * @return (void)
 */
 void printTemperature(char* word1, byte word2) {
-    // Clear the LCD
-    clearLCD();
-
-    // Put the LCD screen in command mode.
-    LCD.write(0xFE);
-
-    // Get word1 length
-    int word1Len = strlen(word1);
-
-    // Set cursor to first row, first column
-    LCD.write(((16-word1Len)/2) + 0*64 + 128);
-
-    // Print the message
-    LCD.print(word1);
-
-    // If there is another word
-    if (word2 != 0) {
-        // Put the LCD screen in command mode.
-        LCD.write(0xFE);
-
-        // Get word1 length
-        int word2Len = strlen(word2);
-    
-        // Set cursor to first row, first column
-        LCD.write(((16-word2Len)/2) + 1*64 + 128);
-        
-        // Print the message
-        LCD.print(word2);
-    }
-	
-    // Delay for 10 milliseconds
-    delay(10);
+//    // Clear the LCD
+//    clearLCD();
+//
+//    // Put the LCD screen in command mode.
+//    LCD.write(0xFE);
+//
+//    // Get word1 length
+//    int word1Len = strlen(word1);
+//
+//    // Set cursor to first row, first column
+//    LCD.write(((16-word1Len)/2) + 0*64 + 128);
+//
+//    // Print the message
+//    LCD.print(word1);
+//
+//    // If there is another word
+//    if (word2 != 0) {
+//        // Put the LCD screen in command mode.
+//        LCD.write(0xFE);
+//
+//        // Get word1 length
+//        int word2Len = strlen(word2);
+//    
+//        // Set cursor to first row, first column
+//        LCD.write(((16-word2Len)/2) + 1*64 + 128);
+//        
+//        // Print the message
+//        LCD.print(word2);
+//    }
+//  
+//    // Delay for 10 milliseconds
+//    delay(10);
 }
 
 /**
@@ -271,7 +315,7 @@ void actionLength(int ticks) {
 * @return (void)
 */
 void processUserAction() {
-	// TO DO
+  // TO DO
 }
 
 /**
@@ -281,8 +325,8 @@ void processUserAction() {
 * @return (void)
 */
 void calculateDistance(int distance) {
-	// TO DO
-	// Return in ticks
+  // TO DO
+  // Return in ticks
 }
 
 /**
@@ -292,8 +336,8 @@ void calculateDistance(int distance) {
 * @return (void)
 */
 void calculateDegrees(long degrees) {
-	// TO DO
-	// Return in ticks
+  // TO DO
+  // Return in ticks
 }
 
 /**
