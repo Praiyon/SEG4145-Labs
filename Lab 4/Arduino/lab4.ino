@@ -1,6 +1,3 @@
-
-
-
 /**
 * Ryan Fitzgerald (7233237)
 * Cody McCoshen (7208960)
@@ -16,9 +13,8 @@
 #include <SoftwareSerial.h>
 #include <stdio.h>
 #include <Wire.h>
-//#include <Wirefree.h>
-//#include <WifiClient.h>
-#include <WiFi.h>
+#include <Wirefree.h>
+#include <WifiClient.h>
 
 
 // Macros
@@ -30,12 +26,12 @@
 #define RIGHT_STOP()      analogWrite(8, 0);
 #define TEMPSENSOR        0x68
 
-//WIFI_PROFILE wireless_prof = {"Mi-Fi-Guy","06f50719d6c1","10.136.160.21","255.255.255.0","192.168.43.1"};
+WIFI_PROFILE wireless_prof = {"stingray","","10.136.160.21","255.255.255.0","10.136.160.1"};
 
 String remote_server = "137.122.45.214"; 
 String remote_port = "9876";
 
-//WifiClient client(remote_server, remote_port, PROTO_UDP);
+WifiClient client(remote_server, remote_port, PROTO_UDP);
 
 // Global variables
 int flashing, checkSonar;
@@ -45,11 +41,10 @@ long distance;
 byte temperatureData;
 SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 int reg = 0x01; // For ambient temperature reader
+int quit = 0; // Flag to quit connection
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-  
-
     
     // Assign all required pins
     pinMode(13, OUTPUT); // LED
@@ -94,37 +89,38 @@ void setup() {
     // Join I2C bus for ambient temp
     Wire.begin();
     
-        byte mac[6];
-    WiFi.macAddress(mac);
-    printMessage((char *)mac, "asfsadf");
-    
-    delay(5000);
-    
-    printMessage("Profile","Before");
-    
     // connect to AP
-    //Wireless.begin(&wireless_prof);
-    
-    printMessage("Profile","After");
-    
-//    if(client.connect()){
-//      printMessage("Client", "Connected");
-//      //client.println("A message");
-//    } else {
-//      printMessage("Connection", "Failed");
-//    } 
+    Wireless.begin(&wireless_prof);
+
+    // Try and connect to client
+    if (client.connect()) {
+        // prints to serial if connected
+        Serial.println("Connection successful.");
+
+        // Send message over UDP socket to peer device
+        client.println("Robot now connected.");
+    } else {
+        // prints to serial if not connected
+        Serial.println("Connection failed.");
+    }
 }
 
 // the loop function runs over and over again forever
 void loop() {
-//  printMessage("Waiting For","Client");
-//  while (client.available()){
-//    int in;
-//    while((in = client.read()) == -1);
-//
-//    printMessage("Client Says:",(char*)in);
-//  }
-//  delay(1);
+    // if there are incoming bytes available from the peer 
+    // device, read them and print them:
+    while (client.available()) {
+        int in[2] = {};
+        while ((in = client.read()) == -1); // While nothing returned
+        Serial.print((char)in);
+        if (quit == 1) {
+            client.disconnect();
+            break;
+        }
+    }
+    
+    // Delay for 1 millisecond
+    delay(1);
 }
 
 /**
@@ -144,7 +140,7 @@ void clearLCD() {
 * @param word1 word on first line, word2 word of second line
 * @return (void)
 */
-void printMessage(char * word1, char* word2) {
+void printMessage(char* word1, char* word2) {
     // Clear the LCD
     clearLCD();
 
@@ -186,38 +182,79 @@ void printMessage(char * word1, char* word2) {
 * @return (void)
 */
 void printTemperature(char* word1, byte word2) {
-//    // Clear the LCD
-//    clearLCD();
-//
-//    // Put the LCD screen in command mode.
-//    LCD.write(0xFE);
-//
-//    // Get word1 length
-//    int word1Len = strlen(word1);
-//
-//    // Set cursor to first row, first column
-//    LCD.write(((16-word1Len)/2) + 0*64 + 128);
-//
-//    // Print the message
-//    LCD.print(word1);
-//
-//    // If there is another word
-//    if (word2 != 0) {
-//        // Put the LCD screen in command mode.
-//        LCD.write(0xFE);
-//
-//        // Get word1 length
-//        int word2Len = strlen(word2);
-//    
-//        // Set cursor to first row, first column
-//        LCD.write(((16-word2Len)/2) + 1*64 + 128);
-//        
-//        // Print the message
-//        LCD.print(word2);
-//    }
-//  
-//    // Delay for 10 milliseconds
-//    delay(10);
+    // Clear the LCD
+    clearLCD();
+
+    // Put the LCD screen in command mode.
+    LCD.write(0xFE);
+
+    // Get word1 length
+    int word1Len = strlen(word1);
+
+    // Set cursor to first row, first column
+    LCD.write(((16-word1Len)/2) + 0*64 + 128);
+
+    // Print the message
+    LCD.print(word1);
+
+    // If there is another word
+    if (word2 != 0) {
+        // Put the LCD screen in command mode.
+        LCD.write(0xFE);
+
+        // Get word1 length
+        int word2Len = strlen(word2);
+    
+        // Set cursor to first row, first column
+        LCD.write(((16-word2Len)/2) + 1*64 + 128);
+        
+        // Print the message
+        LCD.print(word2);
+    }
+  
+    // Delay for 10 milliseconds
+    delay(10);
+}
+
+/**
+* Prints distance of closest object to LCD Screen
+* @name printDistance
+* @param word1 word on first line, word2 word of second line
+* @return (void)
+*/
+void printDistance(char* word1, long word2) {
+    // Clear the LCD
+    clearLCD();
+
+    // Put the LCD screen in command mode.
+    LCD.write(0xFE);
+
+    // Get word1 length
+    int word1Len = strlen(word1);
+
+    // Set cursor to first row, first column
+    LCD.write(((16-word1Len)/2) + 0*64 + 128);
+
+    // Print the message
+    LCD.print(word1);
+
+    // If there is another word
+    if (word2 != 0) {
+        // Put the LCD screen in command mode.
+        LCD.write(0xFE);
+
+        // Get word1 length
+        int word2Len = strlen(word2);
+    
+        // Set cursor to first row, first column
+        LCD.write(((16-word2Len)/2) + 1*64 + 128);
+        
+        // Print the message
+        LCD.print(word2);
+    }
+  
+    // Delay for 10 milliseconds
+    delay(10);
 }
 
 /**
@@ -314,30 +351,59 @@ void actionLength(int ticks) {
 * @params
 * @return (void)
 */
-void processUserAction() {
-  // TO DO
+void processUserAction(int input[2]) {
+    // Store selection
+    int selection = input[0];
+    
+    // Switch case
+    switch(selection) {
+        case 1:
+            moveForward(calculateDistance(input[1]));
+            break;
+        case 2:
+            moveBackward(calculateDistance(input[1]));
+            break;
+        case 3:
+            turnRight(calculateDegrees(input[1]));
+            break;
+        case 4:
+            turnLeft(calculateDegrees(input[1]));
+            break;
+        case 5:
+            readSonar();
+            printDistance("Distance", distance);
+            break;
+        case 6:
+            readTemp();
+            printTemperature("Temperature", temperatureData);
+            break;
+        case 7:
+            quit = 1;
+            break;
+    }
+    
+    // Stop motor
+    stopMotor(10);
 }
 
 /**
 * Takes cm distance and converts to ticks
 * @name calculateDistance
 * @params distance distance in cm
-* @return (void)
+* @return int number of ticks
 */
-void calculateDistance(int distance) {
-  // TO DO
-  // Return in ticks
+int calculateDistance(int distance) {
+    return (distance * 100);
 }
 
 /**
 * Takes degrees and converts to ticks
 * @name calculateDegrees
 * @params degrees degrees in 
-* @return (void)
+* @return int number of ticks
 */
-void calculateDegrees(long degrees) {
-  // TO DO
-  // Return in ticks
+int calculateDegrees(long degrees) {
+    return (degrees * 100);
 }
 
 /**
@@ -404,6 +470,7 @@ void stopMotor(int duration) {
     LEFT_STOP();
     RIGHT_STOP();
     turning = 0;
+    printMessage("Stopped", 0);
     delay(duration);
 }
 
@@ -418,6 +485,7 @@ void moveForward(int duration) {
     LEFT_FORWARD();
     RIGHT_FORWARD();
     turning = 0;
+    printMessage("Moving", "Forward");
     actionLength(duration);
 }
 
@@ -432,6 +500,7 @@ void moveBackward(int duration) {
     LEFT_BACKWARD();
     RIGHT_BACKWARD();
     turning = 1; // Flag so wheels don't get adjusted
+    printMessage("Moving", "Backward");
     actionLength(duration);
 }
 
@@ -446,6 +515,7 @@ void turnLeft(int duration) {
     LEFT_BACKWARD();
     RIGHT_FORWARD();
     turning = 1;
+    printMessage("Rotating", "Left");
     actionLength(duration);
 }
 
@@ -460,6 +530,7 @@ void turnRight(int duration) {
     LEFT_FORWARD();
     RIGHT_BACKWARD();
     turning = 1;
+    printMessage("Rotating", "Right");
     actionLength(duration);
 }
 
