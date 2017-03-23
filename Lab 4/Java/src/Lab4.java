@@ -12,9 +12,6 @@ public class Lab4 {
 	 */
 	public static void main(String args[]) throws IOException {
 		
-		// Store message to be passed to robot
-		int[] message = new int[2];
-		
 		// Reading from System.in
 		Scanner reader = new Scanner(System.in);  
 		
@@ -39,12 +36,12 @@ public class Lab4 {
 			
 			// Print port information
 			System.out.println("Listening on port " + PORT);
-             
-            // Send initial message to Sender to keep loop active
-            out.println();
  
             // While input is received
             while ((inputLine = in.readLine()) != null) {
+
+            	// Store message being sent to robot
+            	String message;
 
             	try {
         			
@@ -64,16 +61,18 @@ public class Lab4 {
         			// Check for incorrect input
         			if (command == 7) {
         				System.out.println("Quit selected, quiting now.");
+        				message = "7";
         			} else if (command > 7 || command < 1) {
         				System.out.println("Incorrect input, ensure int from 1 to 7 is used.");
-        			}
-        			
-        			// Pass command chosen to function which further prompts user
-        			// and stores result (Format: {command, additional})
-        			message = processInput(command);
-     
+        				break;
+        			} else {
+						// Pass command chosen to function which further prompts user
+						// and stores result (Format: {command, additional})
+						message = processInput(command);
+					}
+
 					// Send the result to robot
-					out.println(1);
+					out.println(message);
 					
 				} catch (NullPointerException e) {
 					System.out.println("Nothing entered, closing connection");
@@ -98,7 +97,7 @@ public class Lab4 {
 	 * and prompts the user for any additional required information
 	 * in order to be sent to the robot
 	 */
-	private static int[] processInput(int command) {
+	private static String processInput(int command) {
 		
 		// Reading from System.in
 		Scanner reader = new Scanner(System.in); 
@@ -117,7 +116,14 @@ public class Lab4 {
 			
 			// Read user input
 			additionalCommand = reader.nextInt();
-			
+
+			if (additionalCommand > 20 || additionalCommand < 1) {
+				System.out.println("Incorrect value.");
+			} else {
+				// Store result
+				result[1] = additionalCommand;
+			}
+
 			// Store result
 			result[1] = additionalCommand;
 		} else if (command == 3 || command == 4) { // Rotate clockwise or counter-clockwise
@@ -126,9 +132,13 @@ public class Lab4 {
 			
 			// Read user input
 			additionalCommand = reader.nextInt();
-			
-			// Store result
-			result[1] = additionalCommand;
+
+			if (additionalCommand > 359 || additionalCommand < 1) {
+				System.out.println("Incorrect value.");
+			} else {
+				// Store result
+				result[1] = additionalCommand;
+			}
 		} else if (command == 5) { // Read sonar
 			// Notify user of sonar value being read
 			System.out.println("Sonar will be read.");
@@ -139,14 +149,13 @@ public class Lab4 {
 			// Prompt for temperature type
 			System.out.print("Enter temperature type you wish to receive: \n"
         					+ "1 - Celcius.\n"
-        					+ "2 - Fahrenheit.\n"
-        					+ "3 - Both.\n");
+        					+ "2 - Fahrenheit.\n");
 			
 			// Read user input
 			additionalCommand = reader.nextInt();
 			
 			// Incorrect value
-			if (additionalCommand > 3 || additionalCommand < 1) {
+			if (additionalCommand != 2 && additionalCommand != 1) {
 				System.out.println("Incorrect value.");
 			} else {
 				// Store result
@@ -156,9 +165,9 @@ public class Lab4 {
 		
 		// Close scanner
 		reader.close();
-		
-		// Return the resulting array
-		return result;
+
+		// Return the resulting concatenated string
+		return "" + result[0] + result[1];
 	}
 	
 }

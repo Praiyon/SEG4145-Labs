@@ -26,12 +26,12 @@
 #define RIGHT_STOP()      analogWrite(8, 0);
 #define TEMPSENSOR        0x68
 
-WIFI_PROFILE wireless_prof = {"stingray","","10.136.160.21","255.255.255.0","10.136.160.1"};
+WIFI_PROFILE wireless_prof = {"stingray","","192.168.1.150","255.255.255.0","192.168.1.1"};
 
-String remote_server = "137.122.45.214"; 
+String remote_server = "192.168.1.145"; 
 String remote_port = "9876";
 
-WifiClient client(remote_server, remote_port, PROTO_UDP);
+WifiClient client(remote_server, remote_port, PROTO_TCP);
 
 // Global variables
 int flashing, checkSonar;
@@ -41,7 +41,9 @@ long distance;
 byte temperatureData;
 SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 int reg = 0x01; // For ambient temperature reader
-int quit = 0; // Flag to quit connection
+int command = 0l; // Store user command 1-7
+int commandInput[3] = {-1, -1, -1};
+int count; // Stores current byte
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -110,13 +112,75 @@ void loop() {
     // if there are incoming bytes available from the peer 
     // device, read them and print them:
     while (client.available()) {
-        int in[2] = {};
-        while ((in = client.read()) == -1); // While nothing returned
-        Serial.print((char)in);
-        if (quit == 1) {
-            client.disconnect();
-            break;
-        }
+		
+        int a;
+		char b;
+		
+        while ((a = client.read()) == -1); // While nothing returned
+        
+		// Assign int to char
+		b = a;
+		
+		// If new line is reached and current line is blank
+		if (c == '\n' && currentLineIsBlank) {
+			
+			// Reset count
+			count = 0;
+			
+			// Create empty array of size 2
+			int action[2] = {};
+			
+			// Store command in first spot
+			action[0] = command;
+			
+			// Get input and store in second spot
+			int i, k = 0;
+			for (i = 0; i < 3; i++) {
+				if (arr[i] != -1) {
+					k = 10 * k + arr[i];
+				}
+			}
+			action[1] = k;
+			
+			// Process user action
+			processUserAction(action);
+			
+			// Reset command array
+			commandInput[3] = {-1, -1, -1};
+			
+			// Send response to server
+			client.println("Robot has responded, waiting for next instruction.");
+			
+			// Break current iteration of while loop
+			continue;
+		}
+		
+		// If new line
+		if (c == '\n') {
+			currentLineIsBlank = true;
+			count = 0;
+			command = 0;
+		} else if (c != '\r') { // If byte received
+			currentLineIsBlank = false;
+			
+			// Get the command
+			if (count == 0) {
+				
+				if (c == '07') {
+					Serial.println("Robot quitting.");
+					break;
+				}
+				
+				// Store as int
+				command = c;
+			}
+			
+			// Increment count
+			count++;
+			
+			// Add to array
+			commandInput[count-1] = c;
+		}
     }
     
     // Delay for 1 millisecond
@@ -376,9 +440,6 @@ void processUserAction(int input[2]) {
         case 6:
             readTemp();
             printTemperature("Temperature", temperatureData);
-            break;
-        case 7:
-            quit = 1;
             break;
     }
     
