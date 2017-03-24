@@ -161,13 +161,10 @@ public class Lab4 {
 				// Store result
 				result[1] = additionalCommand;
 			}
-		} 
-		
-		// Close scanner
-		reader.close();
+		}
 
 		// Return the resulting concatenated string
-		return "" + result[0] + result[1];
+		return "" + result[0] + result[1] + "\n";
 	}
 	
 }

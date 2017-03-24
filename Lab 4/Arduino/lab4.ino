@@ -44,6 +44,7 @@ int reg = 0x01; // For ambient temperature reader
 int command = 0l; // Store user command 1-7
 int commandInput[3] = {-1, -1, -1};
 int count; // Stores current byte
+int currentLineIsBlank;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -114,15 +115,15 @@ void loop() {
     while (client.available()) {
 		
         int a;
-		char b;
+		char c;
 		
         while ((a = client.read()) == -1); // While nothing returned
         
 		// Assign int to char
-		b = a;
+		c = a;
 		
 		// If new line is reached and current line is blank
-		if (c == '\n' && currentLineIsBlank) {
+		if (c == '\n' && currentLineIsBlank == 1) {
 			
 			// Reset count
 			count = 0;
@@ -136,8 +137,8 @@ void loop() {
 			// Get input and store in second spot
 			int i, k = 0;
 			for (i = 0; i < 3; i++) {
-				if (arr[i] != -1) {
-					k = 10 * k + arr[i];
+				if (commandInput[i] != -1) {
+					k = 10 * k + commandInput[i];
 				}
 			}
 			action[1] = k;
@@ -146,7 +147,9 @@ void loop() {
 			processUserAction(action);
 			
 			// Reset command array
-			commandInput[3] = {-1, -1, -1};
+			commandInput[0] = -1;
+            commandInput[1] = -1;
+            commandInput[2] = -1;
 			
 			// Send response to server
 			client.println("Robot has responded, waiting for next instruction.");
@@ -157,11 +160,11 @@ void loop() {
 		
 		// If new line
 		if (c == '\n') {
-			currentLineIsBlank = true;
+			currentLineIsBlank = 1;
 			count = 0;
 			command = 0;
 		} else if (c != '\r') { // If byte received
-			currentLineIsBlank = false;
+			currentLineIsBlank = 0;
 			
 			// Get the command
 			if (count == 0) {
@@ -173,13 +176,14 @@ void loop() {
 				
 				// Store as int
 				command = c;
-			}
+			} else {
+                // Add to array
+                commandInput[count-1] = c;
+            }
 			
 			// Increment count
 			count++;
 			
-			// Add to array
-			commandInput[count-1] = c;
 		}
     }
     
@@ -265,12 +269,9 @@ void printTemperature(char* word1, byte word2) {
     if (word2 != 0) {
         // Put the LCD screen in command mode.
         LCD.write(0xFE);
-
-        // Get word1 length
-        int word2Len = strlen(word2);
     
         // Set cursor to first row, first column
-        LCD.write(((16-word2Len)/2) + 1*64 + 128);
+        LCD.write(0 + 1*64 + 128);
         
         // Print the message
         LCD.print(word2);
@@ -297,7 +298,7 @@ void printDistance(char* word1, long word2) {
     int word1Len = strlen(word1);
 
     // Set cursor to first row, first column
-    LCD.write(((16-word1Len)/2) + 0*64 + 128);
+    LCD.write(0 + 0*64 + 128);
 
     // Print the message
     LCD.print(word1);
@@ -306,9 +307,6 @@ void printDistance(char* word1, long word2) {
     if (word2 != 0) {
         // Put the LCD screen in command mode.
         LCD.write(0xFE);
-
-        // Get word1 length
-        int word2Len = strlen(word2);
     
         // Set cursor to first row, first column
         LCD.write(((16-word2Len)/2) + 1*64 + 128);
