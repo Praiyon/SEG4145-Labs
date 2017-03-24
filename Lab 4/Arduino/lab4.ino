@@ -28,7 +28,7 @@
 
 WIFI_PROFILE wireless_prof = {"stingray","","192.168.1.150","255.255.255.0","192.168.1.1"};
 
-String remote_server = "192.168.1.145"; 
+String remote_server = "192.168.1.145";
 String remote_port = "9876";
 
 WifiClient client(remote_server, remote_port, PROTO_TCP);
@@ -48,14 +48,14 @@ int currentLineIsBlank;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-    
+
     // Assign all required pins
     pinMode(13, OUTPUT); // LED
     pinMode(45, OUTPUT); // Left Motor
     pinMode(8, OUTPUT); // Right Motor
     pinMode(49, INPUT); // Left wheel sensor
     pinMode(48, INPUT); // Right wheel sensor
-      
+
     // Asign LCD Port
     LCD.begin(9600);
 
@@ -88,10 +88,10 @@ void setup() {
 
     // Clear LCD
     clearLCD();
-  
+
     // Join I2C bus for ambient temp
     Wire.begin();
-    
+
     // connect to AP
     Wireless.begin(&wireless_prof);
 
@@ -110,30 +110,30 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
-    // if there are incoming bytes available from the peer 
+    // if there are incoming bytes available from the peer
     // device, read them and print them:
     while (client.available()) {
-		
+
         int a;
 		char c;
-		
+
         while ((a = client.read()) == -1); // While nothing returned
-        
+
 		// Assign int to char
-		c = a;
-		
+		c = a; // may need to add -->  + '0'
+
 		// If new line is reached and current line is blank
 		if (c == '\n' && currentLineIsBlank == 1) {
-			
+
 			// Reset count
 			count = 0;
-			
+
 			// Create empty array of size 2
 			int action[2] = {};
-			
+
 			// Store command in first spot
 			action[0] = command;
-			
+
 			// Get input and store in second spot
 			int i, k = 0;
 			for (i = 0; i < 3; i++) {
@@ -142,22 +142,22 @@ void loop() {
 				}
 			}
 			action[1] = k;
-			
+
 			// Process user action
 			processUserAction(action);
-			
+
 			// Reset command array
 			commandInput[0] = -1;
             commandInput[1] = -1;
             commandInput[2] = -1;
-			
+
 			// Send response to server
 			client.println("Robot has responded, waiting for next instruction.");
-			
+
 			// Break current iteration of while loop
 			continue;
 		}
-		
+
 		// If new line
 		if (c == '\n') {
 			currentLineIsBlank = 1;
@@ -165,28 +165,28 @@ void loop() {
 			command = 0;
 		} else if (c != '\r') { // If byte received
 			currentLineIsBlank = 0;
-			
+
 			// Get the command
 			if (count == 0) {
-				
+
 				if (c == '07') {
 					Serial.println("Robot quitting.");
 					break;
 				}
-				
+
 				// Store as int
-				command = c;
+				command = c - '0';
 			} else {
                 // Add to array
-                commandInput[count-1] = c;
+                commandInput[count-1] = c - '0';
             }
-			
+
 			// Increment count
 			count++;
-			
+
 		}
     }
-    
+
     // Delay for 1 millisecond
     delay(1);
 }
@@ -231,14 +231,14 @@ void printMessage(char* word1, char* word2) {
 
         // Get word1 length
         int word2Len = strlen(word2);
-    
+
         // Set cursor to first row, first column
         LCD.write(((16-word2Len)/2) + 1*64 + 128);
-        
+
         // Print the message
         LCD.print(word2);
     }
-    
+
     // Delay for 10 milliseconds
     delay(10);
 }
@@ -269,14 +269,14 @@ void printTemperature(char* word1, byte word2) {
     if (word2 != 0) {
         // Put the LCD screen in command mode.
         LCD.write(0xFE);
-    
+
         // Set cursor to first row, first column
         LCD.write(0 + 1*64 + 128);
-        
+
         // Print the message
         LCD.print(word2);
     }
-  
+
     // Delay for 10 milliseconds
     delay(10);
 }
@@ -307,14 +307,14 @@ void printDistance(char* word1, long word2) {
     if (word2 != 0) {
         // Put the LCD screen in command mode.
         LCD.write(0xFE);
-    
+
         // Set cursor to first row, first column
         LCD.write(((16-word2Len)/2) + 1*64 + 128);
-        
+
         // Print the message
         LCD.print(word2);
     }
-  
+
     // Delay for 10 milliseconds
     delay(10);
 }
@@ -348,7 +348,7 @@ void flashLight(int num) {
 * @return (void)
 */
 void adjustSpeed(int motor) {
-    
+
     if (motor == 45) {
       RIGHT_FORWARD();
       analogWrite(motor, 150);
@@ -356,7 +356,7 @@ void adjustSpeed(int motor) {
       LEFT_FORWARD();
       analogWrite(motor, 100);
     }
-    
+
 }
 
 /**
@@ -375,20 +375,20 @@ void actionLength(int ticks) {
     int valid = 0;
 
     while (valid == 0) {
-            
+
         // Read left motor  sensor
         oldPulseLeft = newPulseLeft;
         newPulseLeft = digitalRead(48);
-        
+
         // Read right motor sensor
         oldPulseRight = newPulseRight;
         newPulseRight = digitalRead(49);
-        
+
         // If new tick, increment left time
         if (newPulseLeft != oldPulseLeft) {
             timeLeft++;
         }
-        
+
         // If new tick, increment right time
         if (newPulseRight != oldPulseRight) {
             timeRight++;
@@ -396,7 +396,7 @@ void actionLength(int ticks) {
 
         // If the robot is not currently turning
         if (turning != 1) {
-          
+
           // Check if sensors are equal or not
           if (timeLeft > timeRight) {
               adjustSpeed(45);
@@ -416,7 +416,7 @@ void actionLength(int ticks) {
 void processUserAction(int input[2]) {
     // Store selection
     int selection = input[0];
-    
+
     // Switch case
     switch(selection) {
         case 1:
@@ -440,7 +440,7 @@ void processUserAction(int input[2]) {
             printTemperature("Temperature", temperatureData);
             break;
     }
-    
+
     // Stop motor
     stopMotor(10);
 }
@@ -458,7 +458,7 @@ int calculateDistance(int distance) {
 /**
 * Takes degrees and converts to ticks
 * @name calculateDegrees
-* @params degrees degrees in 
+* @params degrees degrees in
 * @return int number of ticks
 */
 int calculateDegrees(long degrees) {
@@ -471,34 +471,34 @@ int calculateDegrees(long degrees) {
 * @return (void)
 */
 void readSonar(){
-  
+
     // Output Sonar sensor
-    pinMode(22, OUTPUT); 
-  
+    pinMode(22, OUTPUT);
+
     // Write low value to pin
     digitalWrite(22, LOW);
-  
+
     //Wait for 2 microsecs
     delay(0.002);
-  
+
     // Write high value to pin
     digitalWrite(22, HIGH);
-  
+
     //Wait for 5 microsecs
     delay(0.005);
-  
+
     //Write low value to pin
     digitalWrite(22, LOW);
-  
+
     // Input Sonar sensor
     pinMode(22, INPUT);
-  
+
     // Read duration of the pulse
     pingDuration = pulseIn(22, HIGH);
-  
+
     // Calculate distance
     distance = pingDuration / (29*2);
-    
+
     // Delay 10 milliseconds
     delay(10);
 }
@@ -592,4 +592,3 @@ void turnRight(int duration) {
     printMessage("Rotating", "Right");
     actionLength(duration);
 }
-
