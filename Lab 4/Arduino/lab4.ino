@@ -436,7 +436,7 @@ void processUserAction(int input[2]) {
             printDistance("Distance", distance);
             break;
         case 6:
-            readTemp();
+            readTemp(input[1]);
             printTemperature("Temperature", temperatureData);
             break;
     }
@@ -508,13 +508,17 @@ void readSonar(){
 * @name readTemp
 * @return (void)
 */
-void readTemp() {
+void readTemp(int type) {
     Wire.beginTransmission(TEMPSENSOR);
     Wire.write(reg); // Indicate temperature value to read
     Wire.endTransmission();
     Wire.requestFrom(TEMPSENSOR, 1); // Request data
     while(Wire.available() < 1); // Wait for data
     temperatureData = Wire.read(); // Store temperature value
+	// Change if fahrenheit
+	if (type == 2) {
+		temperatureData = temperatureData * 1.8 + 32;
+	}
     delay(50); // Delay 50 ms if values are read in a loop
 }
 
