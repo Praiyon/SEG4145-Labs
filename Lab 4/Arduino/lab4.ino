@@ -41,7 +41,7 @@ long distance;
 byte temperatureData;
 SoftwareSerial LCD = SoftwareSerial(0, 18); // Initialize the LCD screen
 int reg = 0x01; // For ambient temperature reader
-int command = 0l; // Store user command 1-7
+int command = 0; // Store user command 1-7
 int commandInput[3] = {-1, -1, -1};
 int count; // Stores current byte
 int currentLineIsBlank;
@@ -115,12 +115,12 @@ void loop() {
     while (client.available()) {
 
         int a;
-		char c;
+	char c;
 
-        while ((a = client.read()) == -1); // While nothing returned
+        while ((c = client.read()) == -1); // While nothing returned
 
 		// Assign int to char
-		c = a; // may need to add -->  + '0'
+		//a = c; // may need to add -->  + '0'
 
 		// If new line is reached and current line is blank
 		if (c == '\n' && currentLineIsBlank == 1) {
@@ -133,6 +133,7 @@ void loop() {
 
 			// Store command in first spot
 			action[0] = command;
+                        Serial.println(action[0]);
 
 			// Get input and store in second spot
 			int i, k = 0;
@@ -142,14 +143,15 @@ void loop() {
 				}
 			}
 			action[1] = k;
+                        Serial.println(action[1]);
 
 			// Process user action
 			processUserAction(action);
 
 			// Reset command array
 			commandInput[0] = -1;
-            commandInput[1] = -1;
-            commandInput[2] = -1;
+                        commandInput[1] = -1;
+                        commandInput[2] = -1;
 
 			// Send response to server
 			client.println("Robot has responded, waiting for next instruction.");
@@ -162,7 +164,6 @@ void loop() {
 		if (c == '\n') {
 			currentLineIsBlank = 1;
 			count = 0;
-			command = 0;
 		} else if (c != '\r') { // If byte received
 			currentLineIsBlank = 0;
 
@@ -309,7 +310,7 @@ void printDistance(char* word1, long word2) {
         LCD.write(0xFE);
 
         // Set cursor to first row, first column
-        LCD.write(((16-word2Len)/2) + 1*64 + 128);
+        LCD.write(0 + 1*64 + 128);
 
         // Print the message
         LCD.print(word2);
@@ -404,6 +405,11 @@ void actionLength(int ticks) {
               adjustSpeed(8);
           }
         }
+        
+        // Set valid flag to true if both are done		
+        if (timeLeft >= ticks && timeRight >= ticks) {
+          valid = 1;
+        }
     }
 }
 
@@ -413,23 +419,29 @@ void actionLength(int ticks) {
 * @params
 * @return (void)
 */
-void processUserAction(int input[2]) {
+void processUserAction(int input[]) {
     // Store selection
     int selection = input[0];
+    
+    //Serial.println(input[0]);
 
     // Switch case
     switch(selection) {
         case 1:
             moveForward(calculateDistance(input[1]));
+            stopMotor(10);
             break;
         case 2:
             moveBackward(calculateDistance(input[1]));
+            stopMotor(10);
             break;
         case 3:
             turnRight(calculateDegrees(input[1]));
+            stopMotor(10);
             break;
         case 4:
             turnLeft(calculateDegrees(input[1]));
+            stopMotor(10);
             break;
         case 5:
             readSonar();
@@ -440,9 +452,6 @@ void processUserAction(int input[2]) {
             printTemperature("Temperature", temperatureData);
             break;
     }
-
-    // Stop motor
-    stopMotor(10);
 }
 
 /**
@@ -452,7 +461,7 @@ void processUserAction(int input[2]) {
 * @return int number of ticks
 */
 int calculateDistance(int distance) {
-    return (distance * 100);
+    return (distance * 4);
 }
 
 /**
@@ -462,7 +471,7 @@ int calculateDistance(int distance) {
 * @return int number of ticks
 */
 int calculateDegrees(long degrees) {
-    return (degrees * 100);
+    return (degrees * 0.5);
 }
 
 /**
