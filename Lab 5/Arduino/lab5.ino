@@ -36,6 +36,7 @@ WifiClient client(remote_server, remote_port, PROTO_TCP);
 // Global variables
 int flashing, checkSonar;
 int turning = 0;
+int backwards = 0;
 long pingDuration;
 long distance;
 byte temperatureData;
@@ -346,13 +347,23 @@ void flashLight(int num) {
 * @return (void)
 */
 void adjustSpeed(int motor) {
-
-    if (motor == 45) {
-      RIGHT_FORWARD();
-      analogWrite(motor, 150);
+  
+    if (backwards == 1) {
+      if (motor == 45) {
+        RIGHT_BACKWARD();
+        analogWrite(motor, 90);
+      } else {
+        LEFT_BACKWARD();
+        analogWrite(motor, 150);
+      }
     } else {
-      LEFT_FORWARD();
-      analogWrite(motor, 100);
+      if (motor == 45) {
+        RIGHT_FORWARD();
+        analogWrite(motor, 150);
+      } else {
+        LEFT_FORWARD();
+        analogWrite(motor, 100);
+      }
     }
 
 }
@@ -456,7 +467,7 @@ void processUserAction(int input[]) {
 * @return int number of ticks
 */
 int calculateDistance(int distance) {
-    return (distance * 4);
+    return (distance * 3.5);
 }
 
 /**
@@ -466,7 +477,7 @@ int calculateDistance(int distance) {
 * @return int number of ticks
 */
 int calculateDegrees(long degrees) {
-    return (degrees * 0.5);
+    return (degrees * 0.60);
 }
 
 /**
@@ -566,9 +577,10 @@ void moveForward(int duration) {
 void moveBackward(int duration) {
     LEFT_BACKWARD();
     RIGHT_BACKWARD();
-    turning = 1; // Flag so wheels don't get adjusted
+    backwards = 1; // Flag so wheels don't get adjusted
     printMessage("Moving", "Backward");
     actionLength(duration);
+    backwards = 0;
 }
 
 /**
