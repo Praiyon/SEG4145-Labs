@@ -1,61 +1,102 @@
+import java.io.*;
+import java.net.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Lab4Alt extends JFrame{
+public class Lab4Alt {
 
+    private static final int PORT = 9876;
+    public static JFrame frame;
+    public static JLabel operation;
+    public static JLabel timestamp;
     public static int command = -1;
     public static int additionalCommand;
 
-    public static void main(String[] args) {
+    /*
+     * Main method to start the ServerSocket, Listen for Clients,
+     * and handle communication between Sender / Receiver
+     */
+    public static void main(String args[]) throws IOException {
 
-        JFrame frame = new JFrame("SEG4145 Lab 5");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new GridLayout(5, 3));
+        // Reading from System.in
+        Scanner reader = new Scanner(System.in);
 
-        // Create first row
-        frame.add(new JLabel("", JLabel.CENTER));
-        frame.add(new JLabel("Select an Operation:", JLabel.CENTER));
-        frame.add(new JLabel("", JLabel.CENTER));
+        try (
 
-        // Create second row
-        createButton("Move Forward", 1, frame);
-        createButton("Move Backward", 2, frame);
-        createButton("Rotate Clockwise", 3, frame);
+                // Create the server socket for the Receiver
+                ServerSocket receiverSocket = new ServerSocket(PORT);
 
-        // Create third row
-        createButton("Rotate Counter Clockwise", 4, frame);
-        createButton("Read Distance", 5, frame);
-        createButton("Read Temperature", 6, frame);
+                // Create the socket for the sender by accepting connections
+                Socket senderSocket = receiverSocket.accept();
 
-        // Create fourth row
-        frame.add(new JLabel("", JLabel.CENTER));
-        JLabel operation = new JLabel("Last Operation: ", JLabel.CENTER);
-        frame.add(operation);
-        frame.add(new JLabel("", JLabel.CENTER));
+                // Create output stream to sender
+                PrintWriter out = new PrintWriter(senderSocket.getOutputStream(), true);
 
-        // Create fifth row
-        frame.add(new JLabel("", JLabel.CENTER));
-        JLabel timestamp = new JLabel("Timestamp: ", JLabel.CENTER);
-        frame.add(timestamp);
-        frame.add(new JLabel("", JLabel.CENTER));
+                // Create input stream from sender
+                BufferedReader in = new BufferedReader(new InputStreamReader(senderSocket.getInputStream()));
 
-        frame.pack();
-        frame.setVisible(true);
+        ) {
 
-        while (true) {
+            // Create string to store input
+            String inputLine;
 
-            operation.setText("Last Operation: " + command);
-            timestamp.setText("Timestamp: " + new SimpleDateFormat("dd/mm/yy HH:mm").format(new Date()));
-            System.out.println(command);
-            System.out.println(additionalCommand);
+            // Print port information
+            System.out.println("Listening on port " + PORT);
 
+            frame = new JFrame("SEG4145 Lab 5");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.getContentPane().setLayout(new GridLayout(5, 3));
+
+            // Create first row
+            frame.add(new JLabel("", JLabel.CENTER));
+            frame.add(new JLabel("Select an Operation:", JLabel.CENTER));
+            frame.add(new JLabel("", JLabel.CENTER));
+
+            // Create second row
+            createButton("Move Forward", 1, frame, out);
+            createButton("Move Backward", 2, frame, out);
+            createButton("Rotate Clockwise", 3, frame, out);
+
+            // Create third row
+            createButton("Rotate Counter Clockwise", 4, frame, out);
+            createButton("Read Distance", 5, frame, out);
+            createButton("Read Temperature", 6, frame, out);
+
+            // Create fourth row
+            frame.add(new JLabel("", JLabel.CENTER));
+            operation = new JLabel("Last Operation: ", JLabel.CENTER);
+            frame.add(operation);
+            frame.add(new JLabel("", JLabel.CENTER));
+
+            // Create fifth row
+            frame.add(new JLabel("", JLabel.CENTER));
+            timestamp = new JLabel("Timestamp: ", JLabel.CENTER);
+            frame.add(timestamp);
+            frame.add(new JLabel("", JLabel.CENTER));
+
+            frame.pack();
+            frame.setVisible(true);
+
+            // While input is received
+            while ((inputLine = in.readLine()) != null) {
+
+
+
+
+            }
+
+        } catch (IOException e) {
+            // Could not listen on a given port
+            System.err.println("Could not listen on port " + PORT);
+            System.exit(-1);
         }
+
     }
 
-    private static void createButton(String text, int val, JFrame frame) {
+    private static void createButton(String text, int val, JFrame frame, PrintWriter out) {
         JButton btn = new JButton(text);
         btn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e)
@@ -76,12 +117,15 @@ public class Lab4Alt extends JFrame{
                 } else {
                     additionalCommand = 0;
                 }
+
+                operation.setText("Last Operation: " + command);
+                timestamp.setText("Timestamp: " + new SimpleDateFormat("dd/mm/yy HH:mm").format(new Date()));
+
+                // Send to user
+                out.println("" + command + additionalCommand + "\n");
             }
         });
         frame.add(btn);
     }
 
-    private static void getAdditional() {
-        // Do something
-    }
 }
